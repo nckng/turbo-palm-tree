@@ -1,20 +1,32 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for,session,redirect
 import hashlib
 
+
 app = Flask(__name__)
-
-username = "nick"
-password = "password"
-
+app.secret_key = '\x9f&\xe4\x08\xab\xf6\xafW\xb7}\xa6X\xdcSJk\xf91k& \xa5\xb47\xf1"\x1bE\xab\x026]'
+#app.secret_key = 'TSMtsmTSMtsm'
 
 
-@app.route("/")
+@app.route("/",methods=['GET','POST'])
 def templayte():
-    return render_template('newtemp.html')
+    if 'user' in session.keys():
+        return render_template('landing.html',doo = session['user'])
+    else:
+        return redirect(url_for('auth'))
 
-@app.route('/authenticate/', methods =['POST'])
+@app.route('/logout/',methods = ['POST'])
+def logout():
+    if 'user' in session.keys():
+        session.pop('user')
+        return render_template('newtemp.html',floo="You've been logged out")
+    else:
+        return render_template('newtemp.html',floo="You need to log in first!")
+    
+@app.route('/authenticate/', methods =['POST','GET'])
 def auth():
     m=hashlib.md5()
+    if request.method == 'GET':
+        return render_template('newtemp.html')
     if request.form['un'] != '' and request.form['pw']!='':
         if request.form['input'] == 'Create Account':
             pen = open("data/usernames.csv",'r')
@@ -40,7 +52,8 @@ def auth():
                 pw = c.hexdigest()
                 if un == line.split(',')[0]:
                     if pw == line.split(',')[1].strip():
-                        return render_template('success.html')
+                        session['user'] = request.form['un']
+                        return render_template('success.html', woo = request.form['un'])
                     return render_template('newtemp.html', floo = 'Incorrect password')
             return render_template('newtemp.html',floo='Account not found')
     else:
